@@ -1,0 +1,203 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="ObjectDetection.MainWindow"
+        Title="🤖 AI Yüz Tanıma Sistemi - Çoklu Kişi Desteği" Width="1200" Height="800"
+        Background="#FF1E1E1E">
+  
+  <Grid ColumnDefinitions="320,*" Margin="15">
+    
+    <!-- SOL PANEL: Kişi Yönetimi -->
+    <Border Grid.Column="0" 
+            Background="#FF252526" 
+            CornerRadius="10" 
+            Padding="15"
+            Margin="0,0,10,0">
+      <Grid RowDefinitions="Auto,Auto,*,Auto">
+        
+        <!-- Başlık -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+          <TextBlock Text="👥 Kayıtlı Kişiler" 
+                     FontSize="20" 
+                     FontWeight="Bold" 
+                     Foreground="#FF00D9FF"
+                     HorizontalAlignment="Center"/>
+          <TextBlock Name="PersonCountText"
+                     Text="0 kişi kayıtlı" 
+                     FontSize="12" 
+                     Foreground="#FF888888"
+                     HorizontalAlignment="Center"
+                     Margin="0,5,0,0"/>
+        </StackPanel>
+        
+        <!-- Kişi Ekleme Formu -->
+        <Border Grid.Row="1" 
+                Background="#FF2D2D30" 
+                CornerRadius="8" 
+                Padding="12"
+                Margin="0,0,0,15">
+          <StackPanel Spacing="10">
+            <TextBlock Text="➕ Yeni Kişi Ekle" 
+                       FontSize="14" 
+                       FontWeight="SemiBold"
+                       Foreground="#FF00E676"/>
+            
+            <TextBox Name="NewPersonNameBox" 
+                     Watermark="İsim (örn: Berkay)"
+                     FontSize="13"
+                     Background="#FF3C3C3C"
+                     Foreground="White"
+                     BorderBrush="#FF007ACC"
+                     BorderThickness="2"
+                     Padding="8,6"/>
+            
+            <Button Name="AddPersonButton" 
+                    Content="📸 Fotoğraf Seç ve Ekle" 
+                    Height="38" 
+                    FontSize="13"
+                    Background="#FF00E676" 
+                    Foreground="Black"
+                    CornerRadius="6"
+                    FontWeight="SemiBold"
+                    HorizontalAlignment="Stretch"/>
+          </StackPanel>
+        </Border>
+        
+        <!-- Kayıtlı Kişiler Listesi -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+          <StackPanel Name="PeopleListPanel" Spacing="8"/>
+        </ScrollViewer>
+        
+        <!-- Alt Butonlar -->
+        <StackPanel Grid.Row="3" Spacing="8" Margin="0,15,0,0">
+          <Button Name="StartAdvancedCameraButton" 
+                  Content="🎥 Gelişmiş Kamera Başlat" 
+                  Height="48" 
+                  FontSize="14"
+                  Background="#FFFF6B00" 
+                  Foreground="White"
+                  CornerRadius="8"
+                  FontWeight="Bold"
+                  HorizontalAlignment="Stretch"/>
+          
+          <Button Name="ClearAllButton" 
+                  Content="🗑️ Tüm Kayıtları Sil" 
+                  Height="35" 
+                  FontSize="12"
+                  Background="#FFDC3545" 
+                  Foreground="White"
+                  CornerRadius="6"
+                  HorizontalAlignment="Stretch"/>
+        </StackPanel>
+        
+      </Grid>
+    </Border>
+    
+    <!-- SAĞ PANEL: Görüntü ve Test Alanı -->
+    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+      
+      <!-- Başlık -->
+      <Border Grid.Row="0" 
+              Background="#FF2D2D30" 
+              CornerRadius="10" 
+              Padding="20,15" 
+              Margin="0,0,0,15">
+        <StackPanel>
+          <TextBlock Text="🤖 AI Yüz Tanıma Sistemi" 
+                     FontSize="26" 
+                     FontWeight="Bold" 
+                     Foreground="#FF00D9FF"
+                     HorizontalAlignment="Center"/>
+          <TextBlock Text="Face Recognition + Deep Learning" 
+                     FontSize="13" 
+                     Foreground="#FF888888"
+                     HorizontalAlignment="Center"
+                     Margin="0,5,0,0"/>
+        </StackPanel>
+      </Border>
+      
+      <!-- Görüntü Alanı -->
+      <Border Grid.Row="1" 
+              Background="#FF2D2D30"
+              BorderBrush="#FF007ACC" 
+              BorderThickness="3" 
+              CornerRadius="12" 
+              Padding="15">
+        <Grid>
+          <Image Name="ImageDisplay" Stretch="Uniform"/>
+          <!-- Placeholder -->
+          <StackPanel Name="PlaceholderPanel" 
+                      HorizontalAlignment="Center" 
+                      VerticalAlignment="Center"
+                      Spacing="20">
+            <TextBlock Text="🎯" 
+                       FontSize="100" 
+                       HorizontalAlignment="Center"
+                       Foreground="#FF444444"/>
+            <TextBlock Text="Test Bölgesi" 
+                       FontSize="22" 
+                       FontWeight="Bold"
+                       Foreground="#FF666666"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Sol panelden kişi ekleyin, sonra 'Gelişmiş Kamera'yı başlatın" 
+                       FontSize="14" 
+                       Foreground="#FF555555"
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       MaxWidth="400"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+      
+      <!-- Alt Bilgi ve Basit Test Butonları -->
+      <Border Grid.Row="2" 
+              Background="#FF252526" 
+              CornerRadius="8" 
+              Padding="15"
+              Margin="0,15,0,0">
+        <StackPanel Spacing="10">
+          <TextBlock Text="� Basit Test Modları (Eski Sistem - Tek Yüz)" 
+                     FontSize="13" 
+                     Foreground="#FF888888"
+                     HorizontalAlignment="Center"
+                     FontWeight="SemiBold"/>
+          
+          <StackPanel Orientation="Horizontal" 
+                      HorizontalAlignment="Center" 
+                      Spacing="10">
+            <Button Name="LoadImageButton" 
+                    Content="� Görsel Yükle" 
+                    Width="140" 
+                    Height="38" 
+                    FontSize="13"
+                    Background="#FF3C3C3C" 
+                    Foreground="White"
+                    CornerRadius="6"/>
+            <Button Name="DetectFacesButton" 
+                    Content="🔍 Basit Tespit" 
+                    Width="140" 
+                    Height="38" 
+                    FontSize="13"
+                    Background="#FF3C3C3C" 
+                    Foreground="White"
+                    CornerRadius="6"/>
+            <Button Name="ClearButton" 
+                    Content="🗑️ Temizle" 
+                    Width="120" 
+                    Height="38" 
+                    FontSize="13"
+                    Background="#FF3C3C3C" 
+                    Foreground="White"
+                    CornerRadius="6"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+      
+    </Grid>
+    
+  </Grid>
+  
+</Window>
