@@ -15,10 +15,8 @@ namespace ObjectDetection;
 public partial class MainWindow : Avalonia.Controls.Window
 {
     private string? currentImagePath;
-    private readonly string cascadePath = "haarcascade_frontalface_default.xml";
     private readonly string pythonScript = "face_detector.py";
     private readonly string cameraScript = "camera_face_detector.py";
-    private readonly string advancedScript = "advanced_face_recognition.py";
     private List<string> knownPeople = new List<string>();
 
     public MainWindow()
@@ -27,6 +25,7 @@ public partial class MainWindow : Avalonia.Controls.Window
         
         var loadButton = this.FindControl<Button>("LoadImageButton");
         var detectButton = this.FindControl<Button>("DetectFacesButton");
+        var recognizeButton = this.FindControl<Button>("RecognizeButton");
         var startCameraButton = this.FindControl<Button>("StartCameraButton");
         var clearButton = this.FindControl<Button>("ClearButton");
         var addPersonButton = this.FindControl<Button>("AddPersonButton");
@@ -38,6 +37,9 @@ public partial class MainWindow : Avalonia.Controls.Window
         
         if (detectButton != null)
             detectButton.Click += DetectFacesButton_Click;
+        
+        if (recognizeButton != null)
+            recognizeButton.Click += RecognizeButton_Click;
         
         if (startCameraButton != null)
             startCameraButton.Click += StartCameraButton_Click;
@@ -61,7 +63,7 @@ public partial class MainWindow : Avalonia.Controls.Window
     private string GetPersonName()
     {
         var nameBox = this.FindControl<TextBox>("NewPersonNameBox");
-        return nameBox?.Text ?? "Berkay";
+        return nameBox?.Text?.Trim() ?? "";
     }
 
     private async void LoadKnownPeople()
@@ -234,7 +236,7 @@ public partial class MainWindow : Avalonia.Controls.Window
             var startInfo = new ProcessStartInfo
             {
                 FileName = "python3",
-                Arguments = $"\"{advancedScript}\" add_person \"{cascadePath}\" \"{imagePath}\" \"{personName}\"",
+                Arguments = $"face_recognizer.py add \"{imagePath}\" \"{personName}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -250,9 +252,18 @@ public partial class MainWindow : Avalonia.Controls.Window
             
             await process.WaitForExitAsync();
 
+            // Debug
+            Console.WriteLine($"DEBUG AddPerson Output: {output}");
+            Console.WriteLine($"DEBUG AddPerson Error: {error}");
+
             if (!string.IsNullOrWhiteSpace(error))
             {
                 return new PersonAddResult { Success = false, Error = error };
+            }
+
+            if (string.IsNullOrWhiteSpace(output))
+            {
+                return new PersonAddResult { Success = false, Error = "Python boş yanıt döndü" };
             }
 
             var result = JsonSerializer.Deserialize<PersonAddResult>(output);
@@ -271,7 +282,7 @@ public partial class MainWindow : Avalonia.Controls.Window
             var startInfo = new ProcessStartInfo
             {
                 FileName = "python3",
-                Arguments = $"\"{advancedScript}\" {command} \"{cascadePath}\"",
+                Arguments = $"face_recognizer.py list",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -300,7 +311,7 @@ public partial class MainWindow : Avalonia.Controls.Window
             var startInfo = new ProcessStartInfo
             {
                 FileName = "python3",
-                Arguments = $"\"{advancedScript}\" recognize \"{cascadePath}\"",
+                Arguments = "camera_face_recognizer.py",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -460,58 +471,143 @@ public partial class MainWindow : Avalonia.Controls.Window
     {
         if (string.IsNullOrEmpty(currentImagePath))
         {
-            await ShowMessage("Lütfen önce bir görsel yükleyin!");
-            return;
-        }
-        
-        if (!File.Exists(cascadePath))
-        {
-            await ShowMessage($"Haar Cascade dosyası bulunamadı!\n\n" +
-                            $"'{cascadePath}' dosyasını proje klasörüne eklemeniz gerekiyor.");
-            return;
-        }
-
-        if (!File.Exists(pythonScript))
-        {
-            await ShowMessage($"Python script dosyası bulunamadı!\n\n" +
-                            $"'{pythonScript}' dosyası eksik.");
+            await ShowMessage("⚠️ Önce bir görsel yükleyin!");
             return;
         }
 
         try
         {
-            // Python script'ini çalıştır
-            var result = await RunPythonFaceDetection(currentImagePath, cascadePath);
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "python3",
+                Arguments = $"face_detector.py \"{currentImagePath}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = Directory.GetCurrentDirectory()
+            };
+
+            using var process = new Process { StartInfo = startInfo };
+            process.Start();
             
-            if (result.Success)
+            var output = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            
+            var result = JsonSerializer.Deserialize<FaceDetectionResult>(output);
+            
+            if (result?.Success == true && !string.IsNullOrEmpty(result.OutputPath))
             {
                 // İşlenmiş görseli göster
-                if (!string.IsNullOrEmpty(result.OutputPath) && File.Exists(result.OutputPath))
+                using var stream = File.OpenRead(result.OutputPath);
+                var bitmap = new Bitmap(stream);
+                
+                var imageControl = this.FindControl<Image>("ImageDisplay");
+                if (imageControl != null)
                 {
-                    using var stream = File.OpenRead(result.OutputPath);
-                    var bitmap = new Bitmap(stream);
-                    
-                    var imageControl = this.FindControl<Image>("ImageDisplay");
-                    if (imageControl != null)
-                    {
-                        imageControl.Source = bitmap;
-                    }
+                    imageControl.Source = bitmap;
                 }
                 
-                await ShowMessage($"✓ {result.FaceCount} yüz tespit edildi!");
+                var placeholder = this.FindControl<StackPanel>("PlaceholderPanel");
+                if (placeholder != null)
+                    placeholder.IsVisible = false;
+                
+                currentImagePath = result.OutputPath; // Güncelle
+                
+                await ShowMessage($"✅ {result.FaceCount} yüz tespit edildi!");
             }
             else
             {
-                await ShowMessage($"Hata: {result.Error}");
+                await ShowMessage($"❌ {result?.Error ?? "Tespit başarısız!"}");
             }
         }
         catch (Exception ex)
         {
-            await ShowMessage($"Hata: {ex.Message}");
+            await ShowMessage($"❌ Hata: {ex.Message}");
         }
     }
 
-    private async Task<FaceDetectionResult> RunPythonFaceDetection(string imagePath, string cascadePath)
+    private async void RecognizeButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(currentImagePath))
+        {
+            await ShowMessage("⚠️ Önce bir görsel yükleyin!");
+            return;
+        }
+
+        try
+        {
+            // Python ile yüz tanıma
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "python3",
+                Arguments = $"face_recognizer.py recognize \"{currentImagePath}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = Directory.GetCurrentDirectory()
+            };
+
+            using var process = new Process { StartInfo = startInfo };
+            process.Start();
+            
+            var output = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            
+            var result = JsonSerializer.Deserialize<RecognizeResult>(output);
+            
+            if (result?.Success == true && !string.IsNullOrEmpty(result.OutputPath))
+            {
+                // İşlenmiş görseli göster (yeşil çerçeveli)
+                using var stream = File.OpenRead(result.OutputPath);
+                var bitmap = new Bitmap(stream);
+                
+                var imageControl = this.FindControl<Image>("ImageDisplay");
+                if (imageControl != null)
+                {
+                    imageControl.Source = bitmap;
+                }
+                
+                var placeholder = this.FindControl<StackPanel>("PlaceholderPanel");
+                if (placeholder != null)
+                    placeholder.IsVisible = false;
+                
+                currentImagePath = result.OutputPath; // Güncelle
+                
+                await ShowMessage($"🎭 Tanındı: {result.Name}\n" +
+                                $"Güven: %{(result.Confidence * 100):F1}");
+            }
+            else if (!string.IsNullOrEmpty(result?.OutputPath))
+            {
+                // İşlenmiş görseli göster (kırmızı çerçeveli - bilinmeyen)
+                using var stream = File.OpenRead(result.OutputPath);
+                var bitmap = new Bitmap(stream);
+                
+                var imageControl = this.FindControl<Image>("ImageDisplay");
+                if (imageControl != null)
+                {
+                    imageControl.Source = bitmap;
+                }
+                
+                var placeholder = this.FindControl<StackPanel>("PlaceholderPanel");
+                if (placeholder != null)
+                    placeholder.IsVisible = false;
+                
+                currentImagePath = result.OutputPath; // Güncelle
+                
+                await ShowMessage($"❌ {result?.Message ?? "Bilinmeyen kişi"}");
+            }
+            else
+            {
+                await ShowMessage($"❌ {result?.Error ?? result?.Message ?? "Tanıma başarısız"}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowMessage($"❌ Hata: {ex.Message}");
+        }
+    }    private async Task<FaceDetectionResult> RunPythonFaceDetection(string imagePath, string cascadePath)
     {
         try
         {
@@ -610,8 +706,7 @@ public partial class MainWindow : Avalonia.Controls.Window
                 {
                     await ShowMessage($"✓ Kamera kapatıldı!\n\n" +
                                     $"Toplam tespit edilen yüz: {result.TotalFacesDetected}\n" +
-                                    $"İşlenen kare sayısı: {result.FramesProcessed}\n" +
-                                    $"Ortalama yüz/kare: {result.AverageFacesPerFrame}");
+                                    $"İşlenen kare sayısı: {result.FramesProcessed}");
                 }
             }
             catch
@@ -690,6 +785,25 @@ public class CameraDetectionResult
     
     [System.Text.Json.Serialization.JsonPropertyName("frames_processed")]
     public int FramesProcessed { get; set; }
+}
+
+// Yüz tanıma sonucu için model
+public class RecognizeResult
+{
+    [System.Text.Json.Serialization.JsonPropertyName("success")]
+    public bool Success { get; set; }
+    
+    [System.Text.Json.Serialization.JsonPropertyName("name")]
+    public string? Name { get; set; }
+    
+    [System.Text.Json.Serialization.JsonPropertyName("confidence")]
+    public double Confidence { get; set; }
+    
+    [System.Text.Json.Serialization.JsonPropertyName("message")]
+    public string? Message { get; set; }
+    
+    [System.Text.Json.Serialization.JsonPropertyName("output_path")]
+    public string? OutputPath { get; set; }
     
     [System.Text.Json.Serialization.JsonPropertyName("average_faces_per_frame")]
     public double AverageFacesPerFrame { get; set; }

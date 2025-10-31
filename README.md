@@ -1,6 +1,16 @@
-# 🎯 Yüz Tanıma Uygulaması - C# & Avalonia UI
+# 🎯 Yüz Tanıma & Kişi Tanıma Uygulaması - C# & Avalonia UI
 
-Bu proje, C# ve Avalonia UI kullanılarak geliştirilmiş modern bir yüz tanıma uygulamasıdır. Görüntü işleme için Python ve OpenCV entegrasyonu kullanılmaktadır.
+Bu proje, C# ve Avalonia UI kullanılarak geliştirilmiş **akıllı yüz tanıma ve kişi tanıma** uygulamasıdır. 
+
+**Özellikler:**
+- ✅ **YuNet Model** ile hızlı ve doğru yüz tespiti (OpenCV 2023 resmi modeli)
+- 🎭 **Kişi Tanıma Sistemi** - Histogram tabanlı yüz tanıma
+- 📸 **Statik Görüntü Tespiti** - Fotoğraf üzerinde yüz tespiti
+- 🎥 **Canlı Kamera** - Gerçek zamanlı yüz tespiti
+- 🎥 **Gelişmiş Kamera** - Canlı kamera ile kişi tanıma
+- 💾 **Kişi Veritabanı** - Sınırsız kişi ekleyip tanıyın
+
+Görüntü işleme için Python ve OpenCV entegrasyonu kullanılmaktadır.
 
 ## 📋 Gereksinimler
 
@@ -73,7 +83,7 @@ dotnet run
 ## ✨ Özellikler
 
 - ✅ Modern ve kullanıcı dostu arayüz
-- ✅ Hızlı ve doğru yüz tanıma (Haar Cascade)
+- ✅ Hızlı ve doğru yüz tespiti (YuNet ONNX)
 - ✅ **Canlı kamera desteği** 📹 (Gerçek zamanlı yüz tespiti)
 - ✅ Dosyadan görsel yükleme ve analiz
 - ✅ Çoklu yüz tespiti
@@ -88,11 +98,67 @@ dotnet run
 OMCV/
 ├── MainWindow.axaml                         # UI tasarımı
 ├── MainWindow.axaml.cs                      # C# UI mantığı
-├── face_detector.py                         # Python yüz tanıma (statik) 🐍
-├── camera_face_detector.py                  # Python kamera modülü �
-├── haarcascade_frontalface_default.xml      # OpenCV Cascade modeli
+├── face_detector.py                         # YuNet ile statik yüz tespiti 🐍
+├── camera_detector.py                       # YuNet ile canlı yüz tespiti
+├── face_recognizer.py                       # Kişi ekleme/list/recognize (görsel)
+├── camera_face_recognizer.py                # Canlı kamera kişi tanıma
+├── augment_faces.py                         # Veri artırma (poz/ışık)
+├── face_detection_yunet_2023mar.onnx        # YuNet modeli
 ├── ObjectDetection.csproj
 └── Program.cs
+```
+
+## ⚠️ Beta Uyarısı ve Sınırlamalar
+
+- Yüz tanıma modülü BETA. Yan dönük (yaw/pitch), kötü ışık, bulanıklık durumlarında doğruluk düşebilir.
+- Daha iyi sonuç için her kişi için 6–10 farklı örnek ekleyin (frontal, hafif sola/sağa bakış, farklı ışık). Aynı isimle ekledikçe veritabanına yeni örnekler eklenir.
+- Kamera tarafında isim gösterimi, birkaç kare üst üste aynı sonuç gelince yapılır (geçici kararlılık).
+
+## 🎛️ Ayarlar ve İpuçları
+
+- Eşik ayarı: kosinüs uzaklığı için ortam değişkeni ile ayarlayın.
+  ```bash
+  FACE_THRESHOLD=0.55 dotnet run
+  ```
+  0.45–0.60 aralığı iyi bir başlangıçtır. Terminaldeki `DEBUG: Mesafe` çıktılarına göre ayarlayın.
+
+- Python bağımlılıkları:
+  ```bash
+  pip install opencv-python opencv-contrib-python numpy
+  ```
+
+## 🧪 Veri Artırma (Augmentation)
+
+Tek fotoğraftan gerçekçi sayılabilecek varyantlar (küçük dönüş, perspektif yaw, ışık, flip, hafif noise) üretir. İsterseniz otomatik veritabanına ekler.
+
+```bash
+python3 augment_faces.py ./ornek.jpg Berkay --count 12 --output-dir augmented --register
+```
+
+- Çıktılar `augmented/<isim>/` klasörüne kaydedilir.
+- `--register` kullanırsanız her oluşturulan görsel veritabanına aynı isimle eklenir.
+
+## ☁️ GitHub’a Yükleme
+
+Gereksiz/üretilen dosyaları `.gitignore` ile dışladık: `bin/`, `obj/`, `__pycache__/`, `face_database.pkl`, `*_recognized.*`, `*_detected.*`, `augmented/`. Büyük ve kullanılmayan Caffe modeli `res10_...caffemodel` ve `deploy.prototxt` de dışlandı.
+
+1) Değişiklikleri ekleyin ve commit’leyin
+```bash
+git add -A
+git commit -m "Prepare repo: ignore outputs, add augmentation, update README"
+```
+
+2) Uzak depo ayarı ve push
+```bash
+git branch -M main
+git remote add origin https://github.com/berkay123001/Opencv_Yuz_Tanima_okul.git
+git push -u origin main
+```
+
+Eğer uzaktan repo zaten bağlıysa:
+```bash
+git remote set-url origin https://github.com/berkay123001/Opencv_Yuz_Tanima_okul.git
+git push -u origin main
 ```
 
 ## 🔧 Teknik Detaylar
@@ -100,14 +166,14 @@ OMCV/
 ### Statik Görsel İşlem Akışı
 1. Kullanıcı görseli seçer (C# UI)
 2. `face_detector.py` subprocess olarak çağrılır
-3. OpenCV ile yüzler tespit edilir (Haar Cascade)
+3. OpenCV YuNet ile yüzler tespit edilir
 4. İşlenmiş görsel kaydedilir
 5. Sonuç JSON ile C#'a döndürülür
 6. Görsel UI'da gösterilir
 
 ### Canlı Kamera İşlem Akışı
 1. Kullanıcı "Canlı Kamera Başlat" butonuna basar
-2. `camera_face_detector.py` subprocess olarak başlatılır
+2. `camera_detector.py` subprocess olarak başlatılır
 3. Kamera açılır ve sürekli frame alır
 4. Her frame'de yüzler tespit edilir (real-time)
 5. Tespit edilen yüzler yeşil dikdörtgenle işaretlenir

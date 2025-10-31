@@ -3,3 +3,18 @@ obj/
 *.user
 *.suo
 .vs/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+.env
+
+# Local face DB and generated outputs
+face_database.pkl
+*_recognized.*
+*_detected.*
+augmented/
+
+# Unused large DNN model (not required by current app)
+res10_*.caffemodel
+deploy.prototxt

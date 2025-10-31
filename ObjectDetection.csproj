@@ -22,7 +22,19 @@
     <None Include="camera_detector.py" Condition="Exists('camera_detector.py')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="camera_face_recognizer.py" Condition="Exists('camera_face_recognizer.py')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="face_recognizer.py" Condition="Exists('face_recognizer.py')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="haarcascade_frontalface_default.xml" Condition="Exists('haarcascade_frontalface_default.xml')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="face_detection_yunet_2023mar.onnx" Condition="Exists('face_detection_yunet_2023mar.onnx')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="augment_faces.py" Condition="Exists('augment_faces.py')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

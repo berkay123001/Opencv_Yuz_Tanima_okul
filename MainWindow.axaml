@@ -184,6 +184,15 @@
                     Background="#FF3C3C3C" 
                     Foreground="White"
                     CornerRadius="6"/>
+            <Button Name="RecognizeButton" 
+                    Content="🎭 Kişiyi Tanı" 
+                    Width="140" 
+                    Height="38" 
+                    FontSize="13"
+                    Background="#FF00E676" 
+                    Foreground="Black"
+                    FontWeight="SemiBold"
+                    CornerRadius="6"/>
             <Button Name="StartCameraButton" 
                     Content="🎥 Canlı Kamera" 
                     Width="140" 
