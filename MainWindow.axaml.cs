@@ -27,6 +27,7 @@ public partial class MainWindow : Avalonia.Controls.Window
         
         var loadButton = this.FindControl<Button>("LoadImageButton");
         var detectButton = this.FindControl<Button>("DetectFacesButton");
+        var startCameraButton = this.FindControl<Button>("StartCameraButton");
         var clearButton = this.FindControl<Button>("ClearButton");
         var addPersonButton = this.FindControl<Button>("AddPersonButton");
         var advancedCameraButton = this.FindControl<Button>("StartAdvancedCameraButton");
@@ -37,6 +38,9 @@ public partial class MainWindow : Avalonia.Controls.Window
         
         if (detectButton != null)
             detectButton.Click += DetectFacesButton_Click;
+        
+        if (startCameraButton != null)
+            startCameraButton.Click += StartCameraButton_Click;
         
         if (clearButton != null)
             clearButton.Click += ClearButton_Click;
@@ -426,6 +430,32 @@ public partial class MainWindow : Avalonia.Controls.Window
         }
     }
 
+    private async void StartCameraButton_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "python3",
+                    Arguments = "camera_detector.py",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = false
+                }
+            };
+
+            process.Start();
+            await ShowMessage("🎥 Kamera başlatıldı!\n\nESC tuşu ile kapatabilirsiniz.");
+        }
+        catch (Exception ex)
+        {
+            await ShowMessage($"Hata: {ex.Message}");
+        }
+    }
+
     private async void DetectFacesButton_Click(object? sender, RoutedEventArgs e)
     {
         if (string.IsNullOrEmpty(currentImagePath))
@@ -530,38 +560,6 @@ public partial class MainWindow : Avalonia.Controls.Window
         var placeholder = this.FindControl<StackPanel>("PlaceholderPanel");
         if (placeholder != null)
             placeholder.IsVisible = true;
-    }
-
-    private async void StartCameraButton_Click(object? sender, RoutedEventArgs e)
-    {
-        if (!File.Exists(cascadePath))
-        {
-            await ShowMessage($"Haar Cascade dosyası bulunamadı!\n\n" +
-                            $"'{cascadePath}' dosyası eksik.");
-            return;
-        }
-
-        if (!File.Exists(cameraScript))
-        {
-            await ShowMessage($"Kamera script dosyası bulunamadı!\n\n" +
-                            $"'{cameraScript}' dosyası eksik.");
-            return;
-        }
-
-        try
-        {
-            await ShowMessage("🎥 Kamera penceresi açılacak.\n\n" +
-                            "• ESC tuşu ile çıkış yapabilirsiniz\n" +
-                            "• SPACE tuşu ile ekran görüntüsü alabilirsiniz\n\n" +
-                            "Referans görseliniz varsa yüklü görsel ile karşılaştırma yapılır.");
-            
-            // Python kamera script'ini çalıştır
-            await RunCameraFaceDetection(cascadePath, currentImagePath);
-        }
-        catch (Exception ex)
-        {
-            await ShowMessage($"Kamera hatası: {ex.Message}");
-        }
     }
 
     private async Task RunCameraFaceDetection(string cascadePath, string? referenceImage)

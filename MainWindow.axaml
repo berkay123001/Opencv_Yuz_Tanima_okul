@@ -184,6 +184,14 @@
                     Background="#FF3C3C3C" 
                     Foreground="White"
                     CornerRadius="6"/>
+            <Button Name="StartCameraButton" 
+                    Content="🎥 Canlı Kamera" 
+                    Width="140" 
+                    Height="38" 
+                    FontSize="13"
+                    Background="#FFFF6B00" 
+                    Foreground="White"
+                    CornerRadius="6"/>
             <Button Name="ClearButton" 
                     Content="🗑️ Temizle" 
                     Width="120" 

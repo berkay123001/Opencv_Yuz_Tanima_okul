@@ -19,6 +19,9 @@
     <None Include="face_detector.py" Condition="Exists('face_detector.py')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="camera_detector.py" Condition="Exists('camera_detector.py')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="haarcascade_frontalface_default.xml" Condition="Exists('haarcascade_frontalface_default.xml')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
