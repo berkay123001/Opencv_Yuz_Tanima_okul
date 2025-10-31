@@ -161,6 +161,34 @@ git remote set-url origin https://github.com/berkay123001/Opencv_Yuz_Tanima_okul
 git push -u origin main
 ```
 
+## 🪟 Windows’ta Çalıştırma ve Yayınlama
+
+### Geliştirme ortamında çalıştırma
+
+Gereksinimler: .NET 8 SDK, Python 3.10+, `pip install opencv-python opencv-contrib-python numpy`.
+
+Çalıştırma:
+```powershell
+set FACE_THRESHOLD=0.55
+dotnet run
+```
+
+Not: Python çağrısı Windows’ta çoğunlukla `python` komutu iledir. Eğer `python3` bulunamazsa PATH ayarlarınızı yapın.
+
+### .exe oluşturma (publish)
+
+Runtime dahil tek dosya .exe:
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish/
+```
+
+Hedef makinede .NET Runtime kurulu ise daha küçük paket için:
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish/
+```
+
+Dağıtım: `publish/` klasörünü zip’leyip GitHub **Releases** kısmına yüklemeniz önerilir. `publish/` klasörü repoya commit edilmez (.gitignore). Kullanıcıların Python 3 ve gerekli paketleri kurulu olmalıdır; uygulama çalışırken Python script’lerini çağırır.
+
 ## 🔧 Teknik Detaylar
 
 ### Statik Görsel İşlem Akışı
